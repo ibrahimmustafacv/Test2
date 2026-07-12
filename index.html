@@ -388,20 +388,7 @@
     }
     .address i{ color:var(--gold-deep); font-size:12px; flex-shrink:0; }
 
-    .meter-block{ margin-bottom:10px; }
-    .meter-top{
-        display:flex; justify-content:space-between; align-items:baseline;
-        font-size:12px; color:var(--muted); margin-bottom:4px;
-    }
-    .meter-top b{
-        font-family:'Tajawal', sans-serif;
-        font-size:clamp(13px, 2vw, 14px); color:var(--text);
-        font-variant-numeric:tabular-nums;
-    }
-    .meter-track{
-        height:6px; border-radius:8px; background:#e3dbc4; overflow:hidden;
-    }
-    .meter-fill{ height:100%; border-radius:8px; transition:width .3s ease; }
+    /* تم حذف المقياس (meter-block) بالكامل */
 
     .stamp{
         position:absolute;
@@ -735,11 +722,7 @@
                 }
 
                 container.innerHTML = filtered.map(p => {
-                    const pct = Math.min((p.complaints_count / 10) * 100, 100);
-                    let meterColor = 'var(--safe)';
-                    if (p.complaints_count >= 10) meterColor = 'var(--danger)';
-                    else if (p.complaints_count >= 7) meterColor = 'var(--warn)';
-
+                    // تم حذف المقياس (meter-block) بالكامل من البطاقة
                     const imageHtml = p.image_url ? 
                         `<img src="${p.image_url}" alt="${p.name}" class="place-image" loading="lazy" onerror="this.style.display='none'">` : 
                         `<div class="place-image" style="display:flex;align-items:center;justify-content:center;color:#b7ad92;font-size:14px;background:#e9e2d0;"><i class="fas fa-image" style="margin-left:8px;"></i> لا توجد صورة</div>`;
@@ -753,10 +736,6 @@
                         </div>
                         ${imageHtml}
                         <div class="address"><i class="fas fa-location-dot"></i> ${p.address}</div>
-                        <div class="meter-block">
-                            <div class="meter-top"><span>عدد الشكاوى المؤكدة</span><b>${p.complaints_count} / 10</b></div>
-                            <div class="meter-track"><div class="meter-fill" style="width:${pct}%; background:${meterColor};"></div></div>
-                        </div>
                         <div class="stamp">محظور</div>
                     </div>
                 `;
