@@ -2,553 +2,858 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>السجل العام | القائمة السوداء</title>
+<meta name="description" content="السجل العام للقائمة السوداء — استعراض الكيانات والأماكن المحظورة والإبلاغ عن كيانات جديدة.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
+    /* ============================================================
+       نظام الألوان — سجل رسمي فاخر (كحلي عميق + ذهبي + أحمر رسمي)
+       ============================================================ */
     :root{
-        --ink:#12192b;
-        --ink-2:#1c2946;
-        --paper:#e9e6dd;
-        --paper-deep:#dedad0;
-        --folder:#f1e8d0;
-        --line:#d8cdb0;
-        --text:#20263a;
-        --muted:#6b7280;
-        --gold:#b8892b;
-        --gold-deep:#8f6a1f;
-        --safe:#1f7a53;
-        --safe-bg:#e3f1e9;
-        --warn:#c98a1d;
-        --warn-bg:#faf0dc;
-        --danger:#b91c3c;
-        --danger-bg:#fbe7ea;
-        --radius-s:6px;
-        --radius-m:10px;
-        --shadow-card:0 2px 4px rgba(18,25,43,0.06), 0 10px 24px rgba(18,25,43,0.06);
-        --shadow-lift:0 14px 34px rgba(18,25,43,0.14);
+        --bg:#080d1a;
+        --bg-2:#0c1426;
+        --surface:#101a30;
+        --surface-2:#15203a;
+        --line:rgba(201,162,75,0.16);
+        --line-soft:rgba(255,255,255,0.07);
+        --text:#eef1f8;
+        --text-dim:#9aa5bd;
+        --text-faint:#5f6b85;
+        --gold:#c9a24b;
+        --gold-bright:#e8c26a;
+        --gold-dim:rgba(201,162,75,0.12);
+        --danger:#e04058;
+        --danger-deep:#b91c3c;
+        --danger-bg:rgba(224,64,88,0.10);
+        --safe:#3ecf8e;
+        --radius-s:8px;
+        --radius-m:14px;
+        --radius-l:20px;
+        --shadow-card:0 1px 0 rgba(255,255,255,0.04) inset, 0 10px 30px rgba(0,0,0,0.35);
+        --shadow-lift:0 24px 60px rgba(0,0,0,0.5);
+        --ease:cubic-bezier(.22,1,.36,1);
     }
-    *{ margin:0; padding:0; box-sizing:border-box; font-family:'Cairo', sans-serif; }
+
+    *{ margin:0; padding:0; box-sizing:border-box; }
     html{ scroll-behavior:smooth; }
     body{
+        font-family:'Cairo', sans-serif;
         background:
-            radial-gradient(1200px 600px at 15% -10%, rgba(184,137,43,0.06), transparent 60%),
-            var(--paper);
-        min-height:100vh;
-        padding:16px 12px 80px;
+            radial-gradient(900px 500px at 85% -10%, rgba(201,162,75,0.07), transparent 60%),
+            radial-gradient(700px 500px at 0% 0%, rgba(224,64,88,0.05), transparent 55%),
+            var(--bg);
         color:var(--text);
+        min-height:100vh;
+        line-height:1.6;
+        -webkit-font-smoothing:antialiased;
     }
-    .app-container{ max-width:1200px; margin:0 auto; }
+    h1,h2,h3,.num{ font-family:'Tajawal', sans-serif; }
+    ::selection{ background:rgba(201,162,75,0.3); }
+    button, input, select, textarea{ font-family:'Cairo', sans-serif; }
 
-    /* ========= الهيدر ========= */
-    .masthead{
-        background:linear-gradient(160deg, var(--ink) 0%, var(--ink-2) 100%);
-        color:#fff;
-        border-radius:14px;
-        padding:0;
-        overflow:hidden;
-        box-shadow:var(--shadow-lift);
-        margin-bottom:10px;
+    /* خلفية شبكية خفيفة تعطي إحساس المستندات الرسمية */
+    body::before{
+        content:"";
+        position:fixed; inset:0;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size:44px 44px;
+        pointer-events:none;
+        z-index:0;
+        mask-image:radial-gradient(ellipse 90% 60% at 50% 0%, #000 0%, transparent 75%);
+        -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%, #000 0%, transparent 75%);
     }
-    .masthead-top{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:16px;
-        padding:20px 20px 18px;
-        flex-wrap:wrap;
+
+    .container{ max-width:1240px; margin:0 auto; padding:0 20px; position:relative; z-index:1; }
+
+    /* ============================================================
+       شريط التنبيه العلوي
+       ============================================================ */
+    .top-strip{
+        background:repeating-linear-gradient(135deg, var(--gold) 0 14px, #191203 14px 28px);
+        height:6px;
     }
-    .brand{ display:flex; align-items:center; gap:12px; }
+
+    /* ============================================================
+       الهيدر الثابت
+       ============================================================ */
+    .site-header{
+        position:sticky; top:0; z-index:100;
+        background:rgba(8,13,26,0.82);
+        backdrop-filter:blur(14px);
+        -webkit-backdrop-filter:blur(14px);
+        border-bottom:1px solid var(--line-soft);
+        transition:box-shadow .3s var(--ease);
+    }
+    .site-header.scrolled{ box-shadow:0 12px 40px rgba(0,0,0,0.45); }
+    .header-inner{
+        display:flex; align-items:center; justify-content:space-between;
+        gap:16px; padding:14px 0;
+    }
+    .brand{ display:flex; align-items:center; gap:14px; min-width:0; }
     .brand-seal{
-        width:44px; height:44px; flex:0 0 auto;
-        border:2px solid rgba(184,137,43,0.9);
+        width:48px; height:48px; flex:0 0 auto;
+        border:2px solid var(--gold);
         border-radius:50%;
         display:flex; align-items:center; justify-content:center;
-        background:rgba(184,137,43,0.08);
-        color:#e8c26a;
-        font-size:18px;
+        background:var(--gold-dim);
+        color:var(--gold-bright);
+        font-size:19px;
         position:relative;
+        box-shadow:0 0 0 4px rgba(201,162,75,0.08), 0 0 24px rgba(201,162,75,0.18);
     }
     .brand-seal::after{
         content:"";
-        position:absolute; inset:-5px;
-        border:1px dashed rgba(184,137,43,0.45);
+        position:absolute; inset:-6px;
+        border:1px dashed rgba(201,162,75,0.45);
         border-radius:50%;
+        animation:sealSpin 24s linear infinite;
     }
+    @keyframes sealSpin{ to{ transform:rotate(360deg); } }
     .brand-text h1{
-        font-family:'Tajawal', sans-serif;
         font-weight:900;
-        font-size:clamp(18px, 4vw, 23px);
-        letter-spacing:0.3px;
+        font-size:clamp(16px, 3.4vw, 21px);
+        letter-spacing:.2px;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
     .brand-text p{
-        font-size:clamp(10px, 2vw, 12.5px);
-        color:#aab1c6;
-        margin-top:2px;
-        letter-spacing:0.2px;
+        font-size:clamp(10px, 2vw, 12px);
+        color:var(--text-dim);
+        margin-top:1px;
     }
-    .ledger{
-        display:flex;
-        gap:6px;
-        flex-wrap:wrap;
-        width:100%;
-        justify-content:center;
-        margin-top:6px;
+    .header-cta{
+        background:var(--danger-deep);
+        color:#fff; border:none; cursor:pointer;
+        padding:11px 20px;
+        border-radius:99px;
+        font-weight:800; font-size:14px;
+        display:flex; align-items:center; gap:8px;
+        box-shadow:0 6px 20px rgba(185,28,60,0.35);
+        transition:transform .2s var(--ease), background .2s, box-shadow .2s;
+        white-space:nowrap;
     }
-    .ledger .stat{
-        background:rgba(255,255,255,0.06);
-        border:1px solid rgba(255,255,255,0.12);
-        border-radius:var(--radius-s);
-        padding:6px 14px;
-        flex:1 1 auto;
-        min-width:70px;
-        text-align:center;
-    }
-    .ledger .stat span{
-        display:block;
-        font-size:10px;
-        color:#9aa2b8;
-        margin-bottom:2px;
-        letter-spacing:0.3px;
-    }
-    .ledger .stat strong{
-        font-family:'Tajawal', sans-serif;
-        font-size:18px;
-        font-weight:800;
-        font-variant-numeric:tabular-nums;
-    }
-    .ledger .stat.total strong{ color:#fff; }
-    .ledger .stat.bad strong{ color:#f18b9c; }
-    .ledger .stat.good strong{ color:#7fd4ac; }
-    .warning-strip{
-        height:5px;
-        background:repeating-linear-gradient(135deg, var(--gold) 0 12px, #2a2210 12px 24px);
-        opacity:0.9;
+    .header-cta:hover{ background:var(--danger); transform:translateY(-1px); box-shadow:0 10px 26px rgba(224,64,88,0.4); }
+    .header-cta:active{ transform:scale(.97); }
+    .header-cta .cta-text-sm{ display:none; }
+    @media (max-width:560px){
+        .header-cta{ padding:11px 16px; }
+        .header-cta .cta-text-full{ display:none; }
+        .header-cta .cta-text-sm{ display:inline; }
     }
 
-    /* ========= زر الإبلاغ وشريط الأدوات ========= */
-    .report-toolbar {
-        display: flex;
-        gap:10px;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        margin: 18px 0 16px;
-    }
-    .btn-report {
-        background: var(--danger);
-        color: #fff;
-        border: none;
-        padding: 12px 20px;
-        border-radius: var(--radius-m);
-        font-weight: 800;
-        font-size: clamp(14px, 2.5vw, 16px);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 4px 12px rgba(185, 28, 60, 0.3);
-        transition: 0.2s;
-        flex: 1 1 auto;
-        justify-content: center;
-        min-height: 48px;
-    }
-    .btn-report:hover { background: #a31c3a; transform: scale(1.02); }
-    .btn-report:active { transform: scale(0.97); }
-
-    .search-wrap{
-        flex: 1 1 200px;
+    /* ============================================================
+       الهيرو + الإحصائيات
+       ============================================================ */
+    .hero{
+        padding:56px 0 30px;
         position:relative;
-        min-width:140px;
+    }
+    .hero-badge{
+        display:inline-flex; align-items:center; gap:8px;
+        border:1px solid var(--line);
+        background:var(--gold-dim);
+        color:var(--gold-bright);
+        font-size:12.5px; font-weight:700;
+        padding:6px 16px;
+        border-radius:99px;
+        letter-spacing:.4px;
+        margin-bottom:18px;
+    }
+    .hero-badge .dot{
+        width:7px; height:7px; border-radius:50%;
+        background:var(--danger);
+        box-shadow:0 0 0 0 rgba(224,64,88,0.6);
+        animation:pulse 2s infinite;
+    }
+    @keyframes pulse{
+        0%{ box-shadow:0 0 0 0 rgba(224,64,88,0.55); }
+        70%{ box-shadow:0 0 0 9px rgba(224,64,88,0); }
+        100%{ box-shadow:0 0 0 0 rgba(224,64,88,0); }
+    }
+    .hero h2{
+        font-size:clamp(30px, 6.4vw, 52px);
+        font-weight:900;
+        line-height:1.2;
+        letter-spacing:-.5px;
+        max-width:760px;
+        text-wrap:balance;
+    }
+    .hero h2 .accent{
+        color:var(--gold-bright);
+        position:relative;
+        display:inline-block;
+    }
+    .hero h2 .accent::after{
+        content:"";
+        position:absolute; right:0; left:0; bottom:4px;
+        height:10px;
+        background:rgba(201,162,75,0.18);
+        z-index:-1;
+        border-radius:3px;
+    }
+    .hero .sub{
+        color:var(--text-dim);
+        font-size:clamp(14px, 2.4vw, 17px);
+        max-width:620px;
+        margin-top:14px;
+        text-wrap:pretty;
+    }
+
+    /* لوحة الإحصائيات */
+    .stats-board{
+        margin-top:34px;
+        display:grid;
+        grid-template-columns:repeat(3, 1fr);
+        border:1px solid var(--line-soft);
+        border-radius:var(--radius-l);
+        overflow:hidden;
+        background:linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+        box-shadow:var(--shadow-card);
+    }
+    .stat-cell{
+        padding:26px 22px 22px;
+        position:relative;
+        transition:background .3s;
+    }
+    .stat-cell + .stat-cell{ border-right:1px solid var(--line-soft); }
+    .stat-cell:hover{ background:rgba(255,255,255,0.02); }
+    .stat-cell .icon{
+        width:38px; height:38px;
+        border-radius:10px;
+        display:flex; align-items:center; justify-content:center;
+        font-size:15px;
+        margin-bottom:14px;
+    }
+    .stat-cell.total .icon{ background:rgba(255,255,255,0.07); color:var(--text); }
+    .stat-cell.bad .icon{ background:var(--danger-bg); color:var(--danger); }
+    .stat-cell.good .icon{ background:rgba(62,207,142,0.1); color:var(--safe); }
+    .stat-cell .num{
+        font-size:clamp(30px, 5.4vw, 46px);
+        font-weight:900;
+        font-variant-numeric:tabular-nums;
+        line-height:1;
+        letter-spacing:-1px;
+    }
+    .stat-cell.bad .num{ color:var(--danger); }
+    .stat-cell.good .num{ color:var(--safe); }
+    .stat-cell .label{
+        color:var(--text-dim);
+        font-size:clamp(11px, 2vw, 13.5px);
+        font-weight:700;
+        margin-top:8px;
+    }
+    @media (max-width:640px){
+        .stats-board{ grid-template-columns:1fr; }
+        .stat-cell + .stat-cell{ border-right:none; border-top:1px solid var(--line-soft); }
+        .stat-cell{ display:flex; align-items:center; gap:16px; padding:18px 20px; }
+        .stat-cell .icon{ margin-bottom:0; }
+        .stat-cell .label{ margin-top:2px; }
+    }
+
+    /* ============================================================
+       شريط الأدوات (بحث + فلتر)
+       ============================================================ */
+    .toolbar-section{
+        position:sticky;
+        top:77px;
+        z-index:50;
+        padding:14px 0;
+        margin-top:22px;
+    }
+    .toolbar{
+        display:flex; gap:10px; flex-wrap:wrap;
+        background:rgba(16,26,48,0.88);
+        backdrop-filter:blur(12px);
+        -webkit-backdrop-filter:blur(12px);
+        border:1px solid var(--line-soft);
+        border-radius:var(--radius-m);
+        padding:10px;
+        box-shadow:0 14px 40px rgba(0,0,0,0.35);
+    }
+    .search-wrap{
+        flex:1 1 260px;
+        position:relative;
+        min-width:180px;
     }
     .search-wrap i{
-        position:absolute; right:14px; top:50%; transform:translateY(-50%);
-        color:var(--muted); font-size:13px;
+        position:absolute; right:16px; top:50%; transform:translateY(-50%);
+        color:var(--text-faint); font-size:14px;
+        pointer-events:none;
+        transition:color .2s;
     }
+    .search-wrap:focus-within i{ color:var(--gold-bright); }
     .search-wrap input{
         width:100%;
-        padding:12px 40px 12px 14px;
-        border:1px solid var(--line);
-        border-radius:var(--radius-s);
-        background:#fff;
-        font-size:clamp(14px, 2vw, 15px);
-        font-family:'Cairo', sans-serif;
-        min-height:48px;
+        padding:13px 44px 13px 16px;
+        border:1px solid var(--line-soft);
+        border-radius:10px;
+        background:var(--bg-2);
+        color:var(--text);
+        font-size:15px;
+        min-height:50px;
+        transition:border-color .2s, box-shadow .2s;
     }
-    .search-wrap input:focus{ outline:none; border-color:var(--gold); }
-    .toolbar-actions {
-        display: flex;
-        gap:8px;
-        flex-wrap: wrap;
-        align-items: center;
-        flex: 1 1 100%;
+    .search-wrap input::placeholder{ color:var(--text-faint); }
+    .search-wrap input:focus{
+        outline:none;
+        border-color:var(--gold);
+        box-shadow:0 0 0 3px rgba(201,162,75,0.15);
     }
-    .toolbar-actions select{
-        padding:12px 14px;
-        border:1px solid var(--line);
-        border-radius:var(--radius-s);
-        background:#fff;
-        font-size:clamp(14px, 2vw, 15px);
-        font-family:'Cairo', sans-serif;
+    .filter-wrap{
+        flex:1 1 180px;
+        position:relative;
+        min-width:150px;
+    }
+    .filter-wrap i.fa-filter{
+        position:absolute; right:16px; top:50%; transform:translateY(-50%);
+        color:var(--text-faint); font-size:13px;
+        pointer-events:none;
+    }
+    .filter-wrap i.fa-chevron-down{
+        position:absolute; left:14px; top:50%; transform:translateY(-50%);
+        color:var(--text-faint); font-size:11px;
+        pointer-events:none;
+    }
+    .filter-wrap select{
+        width:100%;
+        padding:13px 42px 13px 36px;
+        border:1px solid var(--line-soft);
+        border-radius:10px;
+        background:var(--bg-2);
+        color:var(--text);
+        font-size:15px;
+        min-height:50px;
         cursor:pointer;
-        flex: 1 1 120px;
-        min-height:48px;
+        appearance:none;
+        -webkit-appearance:none;
+        transition:border-color .2s, box-shadow .2s;
     }
+    .filter-wrap select:focus{
+        outline:none;
+        border-color:var(--gold);
+        box-shadow:0 0 0 3px rgba(201,162,75,0.15);
+    }
+    .filter-wrap select option{ background:var(--surface); color:var(--text); }
 
-    /* ========= الفورم (مودال) ========= */
-    .modal-overlay {
-        display: none;
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.6);
-        backdrop-filter: blur(4px);
-        z-index: 2000;
-        justify-content: center;
-        align-items: center;
-        padding: 16px;
-        overflow-y: auto;
+    /* عنوان القسم + عداد النتائج */
+    .section-head{
+        display:flex; align-items:center; justify-content:space-between;
+        gap:12px; flex-wrap:wrap;
+        margin:26px 0 18px;
     }
-    .modal-overlay.active { display: flex; }
-    .modal-box {
-        background: white;
-        max-width: 560px;
-        width: 100%;
-        border-radius: var(--radius-m);
-        padding: 24px 20px 28px;
-        box-shadow: var(--shadow-lift);
-        position: relative;
-        animation: modalIn 0.3s ease;
-        max-height: 95vh;
-        overflow-y: auto;
+    .section-head h3{
+        font-size:clamp(18px, 3.4vw, 24px);
+        font-weight:900;
+        display:flex; align-items:center; gap:10px;
     }
-    @keyframes modalIn {
-        from { opacity: 0; transform: scale(0.95) translateY(20px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
+    .section-head h3 i{ color:var(--danger); font-size:.85em; }
+    .results-count{
+        color:var(--text-dim);
+        font-size:13.5px;
+        font-weight:600;
+        background:var(--surface);
+        border:1px solid var(--line-soft);
+        padding:6px 14px;
+        border-radius:99px;
     }
-    .modal-box .close-modal {
-        position: absolute;
-        top: 14px; left: 18px;
-        background: none;
-        border: none;
-        font-size: 26px;
-        color: var(--muted);
-        cursor: pointer;
-        transition: 0.2s;
-        padding: 4px;
-    }
-    .modal-box .close-modal:hover { color: var(--danger); transform: rotate(90deg); }
-    .modal-box h2 {
-        font-family: 'Tajawal', sans-serif;
-        color: var(--danger);
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        border-bottom: 2px solid var(--line);
-        padding-bottom: 10px;
-        font-size: clamp(18px, 4vw, 22px);
-    }
-    .modal-box .field-group {
-        margin-bottom: 16px;
-    }
-    .modal-box .field-group label {
-        display: block;
-        font-weight: 700;
-        font-size: clamp(13px, 2vw, 14px);
-        color: var(--text);
-        margin-bottom: 5px;
-    }
-    .modal-box .field-group label i { color: var(--gold); margin-left: 6px; }
-    .modal-box .field-group input,
-    .modal-box .field-group select,
-    .modal-box .field-group textarea {
-        width: 100%;
-        padding: 12px 14px;
-        border: 2px solid var(--line);
-        border-radius: var(--radius-s);
-        font-size: clamp(14px, 2vw, 15px);
-        font-family: 'Cairo', sans-serif;
-        background: #fcfaf5;
-        transition: 0.2s;
-        min-height: 48px;
-    }
-    .modal-box .field-group input:focus,
-    .modal-box .field-group select:focus,
-    .modal-box .field-group textarea:focus {
-        border-color: var(--gold);
-        outline: none;
-        background: white;
-    }
-    .modal-box .field-group textarea { resize: vertical; min-height: 70px; }
-    .modal-box .field-group .file-label {
-        display: inline-block;
-        background: var(--ink);
-        color: white;
-        padding: 10px 18px;
-        border-radius: var(--radius-s);
-        cursor: pointer;
-        font-weight: 600;
-        font-size: clamp(13px, 2vw, 14px);
-        transition: 0.2s;
-        min-height: 46px;
-        line-height: 1.4;
-    }
-    .modal-box .field-group .file-label:hover { background: var(--ink-2); }
-    .modal-box .field-group .file-label i { margin-left: 8px; }
-    .modal-box .field-group .file-name {
-        margin-right: 10px;
-        color: var(--muted);
-        font-size: clamp(12px, 1.8vw, 13px);
-    }
-    .modal-box .btn-submit-report {
-        width: 100%;
-        background: var(--danger);
-        color: white;
-        border: none;
-        padding: 14px;
-        border-radius: var(--radius-s);
-        font-weight: 800;
-        font-size: clamp(16px, 3vw, 18px);
-        cursor: pointer;
-        transition: 0.2s;
-        margin-top: 8px;
-        min-height: 54px;
-    }
-    .modal-box .btn-submit-report:hover { background: #a31c3a; }
-    .modal-box .btn-submit-report:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+    .results-count strong{ color:var(--gold-bright); font-variant-numeric:tabular-nums; }
 
-    /* ========= شبكة البطاقات ========= */
+    /* ============================================================
+       شبكة البطاقات
+       ============================================================ */
     .places-grid{
         display:grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap:18px;
-        margin-top: 8px;
+        grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+        gap:20px;
+        padding-bottom:70px;
     }
+    @media (max-width:400px){
+        .places-grid{ grid-template-columns:1fr; gap:16px; }
+    }
+
     .place-card{
         position:relative;
-        background:#f6ecea;
-        border:1px solid #e3b9bd;
+        background:linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+        border:1px solid var(--line-soft);
         border-radius:var(--radius-m);
-        padding:16px 16px 14px;
-        box-shadow:var(--shadow-card);
-        transition:transform .2s ease, box-shadow .2s ease;
         overflow:hidden;
-        animation:rise .35s ease both;
-        display:flex;
-        flex-direction:column;
+        box-shadow:var(--shadow-card);
+        display:flex; flex-direction:column;
+        transition:transform .35s var(--ease), box-shadow .35s var(--ease), border-color .35s;
+        opacity:0;
+        transform:translateY(18px);
     }
-    @keyframes rise{ from{ opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
-    .place-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-lift); }
-    .tab{
-        position:absolute; top:0; right:16px;
-        background:var(--danger);
+    .place-card.revealed{
+        opacity:1;
+        transform:translateY(0);
+        transition:opacity .55s var(--ease), transform .55s var(--ease), box-shadow .35s var(--ease), border-color .35s;
+    }
+    .place-card:hover{
+        transform:translateY(-6px);
+        border-color:rgba(224,64,88,0.35);
+        box-shadow:var(--shadow-lift);
+    }
+    .card-media{
+        position:relative;
+        aspect-ratio:16/9;
+        overflow:hidden;
+        background:var(--bg-2);
+    }
+    .card-media img{
+        width:100%; height:100%;
+        object-fit:cover;
+        display:block;
+        transition:transform .6s var(--ease);
+    }
+    .place-card:hover .card-media img{ transform:scale(1.06); }
+    .card-media::after{
+        content:"";
+        position:absolute; inset:0;
+        background:linear-gradient(180deg, rgba(8,13,26,0.05) 0%, transparent 40%, rgba(8,13,26,0.55) 100%);
+        pointer-events:none;
+    }
+    .no-image{
+        width:100%; height:100%;
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+        gap:8px;
+        color:var(--text-faint);
+        font-size:13px;
+        background:
+            repeating-linear-gradient(135deg, transparent 0 18px, rgba(255,255,255,0.02) 18px 36px),
+            var(--bg-2);
+    }
+    .no-image i{ font-size:26px; opacity:.55; }
+
+    .badge-banned{
+        position:absolute; top:12px; right:12px; z-index:2;
+        background:rgba(185,28,60,0.92);
+        backdrop-filter:blur(6px);
         color:#fff;
-        font-size:11px;
-        font-weight:700;
-        padding:4px 12px 6px;
-        border-radius:0 0 6px 6px;
-        letter-spacing:0.4px;
+        font-size:11.5px; font-weight:800;
+        letter-spacing:.5px;
+        padding:6px 14px;
+        border-radius:99px;
+        display:flex; align-items:center; gap:6px;
+        box-shadow:0 6px 18px rgba(185,28,60,0.4);
     }
-    .card-head{ margin-top:14px; margin-bottom:4px; }
-    .card-head .name{
+    .badge-cat{
+        position:absolute; bottom:12px; right:12px; z-index:2;
+        background:rgba(8,13,26,0.75);
+        backdrop-filter:blur(6px);
+        border:1px solid rgba(255,255,255,0.14);
+        color:var(--text);
+        font-size:11.5px; font-weight:700;
+        padding:5px 13px;
+        border-radius:99px;
+    }
+
+    .card-body{
+        padding:18px 18px 16px;
+        display:flex; flex-direction:column;
+        gap:8px;
+        flex:1;
+        position:relative;
+    }
+    .file-id{
+        font-size:11px;
+        color:var(--gold-bright);
+        font-weight:700;
+        letter-spacing:1.2px;
+        display:flex; align-items:center; gap:6px;
+    }
+    .file-id::before{
+        content:"";
+        width:18px; height:1px;
+        background:var(--gold);
+        opacity:.6;
+    }
+    .card-body .name{
         font-family:'Tajawal', sans-serif;
         font-size:clamp(17px, 3vw, 19px);
         font-weight:800;
-        color:var(--ink);
-        display:block;
-        line-height:1.3;
-    }
-    .card-head .file-id{
-        font-size:11px; color:var(--muted); letter-spacing:0.3px;
-    }
-    .place-image {
-        width: 100%;
-        height: auto;
-        aspect-ratio: 16/9;
-        object-fit: cover;
-        border-radius: var(--radius-s);
-        margin: 8px 0 10px;
-        background: #e9e2d0;
-        border: 1px solid #d8cdb0;
-        max-height: 200px;
+        line-height:1.35;
+        color:var(--text);
     }
     .address{
-        color:#5b5546;
-        font-size:clamp(13px, 2vw, 14px);
-        margin:6px 0 10px;
-        display:flex; align-items:center; gap:6px;
-        word-break: break-word;
+        color:var(--text-dim);
+        font-size:13.5px;
+        display:flex; align-items:flex-start; gap:8px;
+        word-break:break-word;
+        line-height:1.55;
     }
-    .address i{ color:var(--gold-deep); font-size:12px; flex-shrink:0; }
-
-    /* تم حذف المقياس (meter-block) بالكامل */
-
+    .address i{
+        color:var(--gold);
+        font-size:12px;
+        margin-top:5px;
+        flex-shrink:0;
+    }
+    .card-footer{
+        margin-top:auto;
+        padding-top:12px;
+        border-top:1px dashed var(--line-soft);
+        display:flex; align-items:center; justify-content:space-between;
+    }
+    .status-chip{
+        display:inline-flex; align-items:center; gap:7px;
+        color:var(--danger);
+        font-size:12.5px; font-weight:800;
+    }
+    .status-chip .s-dot{
+        width:8px; height:8px; border-radius:50%;
+        background:var(--danger);
+        box-shadow:0 0 10px rgba(224,64,88,0.7);
+    }
     .stamp{
-        position:absolute;
-        left:12px; bottom:12px;
-        border:3px double var(--danger);
+        border:2.5px double var(--danger);
         color:var(--danger);
         font-family:'Tajawal', sans-serif;
         font-weight:900;
-        font-size:clamp(11px, 2vw, 13px);
-        letter-spacing:1px;
-        padding:3px 10px;
+        font-size:12px;
+        letter-spacing:2px;
+        padding:3px 12px;
         border-radius:6px;
-        transform:rotate(-9deg);
-        opacity:0.9;
-        background:rgba(185,28,60,0.04);
-        pointer-events:none;
+        transform:rotate(-7deg);
+        opacity:.85;
+        background:var(--danger-bg);
+        user-select:none;
     }
 
+    /* هياكل التحميل */
+    .skeleton-card{
+        background:linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+        border:1px solid var(--line-soft);
+        border-radius:var(--radius-m);
+        overflow:hidden;
+    }
+    .sk{ background:rgba(255,255,255,0.05); position:relative; overflow:hidden; }
+    .sk::after{
+        content:"";
+        position:absolute; inset:0;
+        background:linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+        animation:shimmer 1.4s infinite;
+        transform:translateX(-100%);
+    }
+    @keyframes shimmer{ to{ transform:translateX(100%); } }
+    .sk-img{ aspect-ratio:16/9; }
+    .sk-body{ padding:18px; display:flex; flex-direction:column; gap:12px; }
+    .sk-line{ height:13px; border-radius:6px; }
+    .sk-line.w40{ width:40%; }
+    .sk-line.w75{ width:75%; }
+    .sk-line.w60{ width:60%; }
+
+    /* الحالة الفارغة */
     .empty-state{
         grid-column:1 / -1;
         text-align:center;
-        padding:50px 16px;
-        color:var(--muted);
-        background:#fff;
+        padding:70px 20px;
+        color:var(--text-dim);
+        background:var(--surface);
         border:1px dashed var(--line);
         border-radius:var(--radius-m);
     }
-    .empty-state i{ font-size:40px; margin-bottom:12px; color:#c9beA0; }
-    .empty-state p{ font-family:'Tajawal', sans-serif; font-weight:700; font-size:clamp(14px, 2.5vw, 16px); }
+    .empty-state .empty-icon{
+        width:74px; height:74px;
+        border-radius:50%;
+        background:var(--gold-dim);
+        border:1px solid var(--line);
+        display:flex; align-items:center; justify-content:center;
+        margin:0 auto 18px;
+        font-size:28px;
+        color:var(--gold-bright);
+    }
+    .empty-state p{
+        font-family:'Tajawal', sans-serif;
+        font-weight:800;
+        font-size:clamp(15px, 2.6vw, 18px);
+        color:var(--text);
+    }
+    .empty-state span{ display:block; margin-top:6px; font-size:13.5px; }
 
-    /* ========= توست ========= */
+    /* ============================================================
+       الفوتر
+       ============================================================ */
+    .site-footer{
+        border-top:1px solid var(--line-soft);
+        background:var(--bg-2);
+        padding:26px 0;
+        text-align:center;
+        color:var(--text-faint);
+        font-size:13px;
+    }
+    .site-footer .foot-brand{
+        color:var(--text-dim);
+        font-weight:700;
+        display:flex; align-items:center; justify-content:center; gap:8px;
+        margin-bottom:6px;
+    }
+    .site-footer .foot-brand i{ color:var(--gold); }
+
+    /* ============================================================
+       زر عائم للموبايل
+       ============================================================ */
+    .fab-report{
+        position:fixed; bottom:22px; left:22px; z-index:90;
+        width:58px; height:58px;
+        border-radius:50%;
+        background:var(--danger-deep);
+        color:#fff;
+        border:none; cursor:pointer;
+        font-size:21px;
+        display:none;
+        align-items:center; justify-content:center;
+        box-shadow:0 12px 32px rgba(185,28,60,0.5);
+        transition:transform .2s var(--ease), background .2s;
+    }
+    .fab-report:hover{ background:var(--danger); }
+    .fab-report:active{ transform:scale(.92); }
+    @media (max-width:560px){
+        .fab-report{ display:flex; }
+    }
+
+    /* ============================================================
+       المودال
+       ============================================================ */
+    .modal-overlay{
+        display:none;
+        position:fixed; inset:0;
+        background:rgba(4,7,14,0.75);
+        backdrop-filter:blur(8px);
+        -webkit-backdrop-filter:blur(8px);
+        z-index:2000;
+        justify-content:center;
+        align-items:flex-start;
+        padding:20px 16px;
+        overflow-y:auto;
+    }
+    .modal-overlay.active{ display:flex; }
+    .modal-box{
+        background:var(--surface);
+        border:1px solid var(--line);
+        max-width:580px; width:100%;
+        border-radius:var(--radius-l);
+        padding:0;
+        box-shadow:var(--shadow-lift);
+        position:relative;
+        animation:modalIn .38s var(--ease);
+        margin:auto 0;
+        overflow:hidden;
+    }
+    @keyframes modalIn{
+        from{ opacity:0; transform:scale(.94) translateY(26px); }
+        to{ opacity:1; transform:scale(1) translateY(0); }
+    }
+    .modal-head{
+        background:linear-gradient(135deg, rgba(185,28,60,0.16) 0%, transparent 65%), var(--bg-2);
+        border-bottom:1px solid var(--line-soft);
+        padding:22px 24px;
+        display:flex; align-items:center; gap:14px;
+    }
+    .modal-head .m-icon{
+        width:46px; height:46px; flex:0 0 auto;
+        border-radius:12px;
+        background:var(--danger-bg);
+        border:1px solid rgba(224,64,88,0.3);
+        color:var(--danger);
+        display:flex; align-items:center; justify-content:center;
+        font-size:18px;
+    }
+    .modal-head h2{
+        font-size:clamp(17px, 3.6vw, 21px);
+        font-weight:900;
+    }
+    .modal-head p{
+        font-size:12.5px;
+        color:var(--text-dim);
+        margin-top:2px;
+    }
+    .close-modal{
+        position:absolute;
+        top:18px; left:18px;
+        width:38px; height:38px;
+        border-radius:10px;
+        background:rgba(255,255,255,0.05);
+        border:1px solid var(--line-soft);
+        color:var(--text-dim);
+        font-size:17px;
+        cursor:pointer;
+        display:flex; align-items:center; justify-content:center;
+        transition:.2s;
+        z-index:3;
+    }
+    .close-modal:hover{ color:var(--danger); border-color:rgba(224,64,88,0.4); transform:rotate(90deg); }
+    .modal-form{
+        padding:24px;
+        max-height:calc(100vh - 200px);
+        overflow-y:auto;
+    }
+    .field-group{ margin-bottom:18px; }
+    .field-row{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:14px;
+    }
+    @media (max-width:520px){
+        .field-row{ grid-template-columns:1fr; gap:0; }
+    }
+    .field-group label{
+        display:block;
+        font-weight:700;
+        font-size:13.5px;
+        color:var(--text);
+        margin-bottom:7px;
+    }
+    .field-group label i{ color:var(--gold); margin-left:7px; font-size:12px; }
+    .field-group input,
+    .field-group select,
+    .field-group textarea{
+        width:100%;
+        padding:12px 15px;
+        border:1px solid var(--line-soft);
+        border-radius:10px;
+        font-size:14.5px;
+        background:var(--bg-2);
+        color:var(--text);
+        transition:border-color .2s, box-shadow .2s;
+        min-height:48px;
+    }
+    .field-group input::placeholder,
+    .field-group textarea::placeholder{ color:var(--text-faint); }
+    .field-group input:focus,
+    .field-group select:focus,
+    .field-group textarea:focus{
+        border-color:var(--gold);
+        outline:none;
+        box-shadow:0 0 0 3px rgba(201,162,75,0.14);
+    }
+    .field-group select{ cursor:pointer; appearance:none; -webkit-appearance:none; }
+    .field-group select option, .field-group select optgroup{ background:var(--surface); color:var(--text); }
+    .field-group textarea{ resize:vertical; min-height:88px; }
+    .hint{
+        font-size:12px;
+        color:var(--text-faint);
+        margin-top:6px;
+    }
+
+    .file-drop{
+        border:1.5px dashed var(--line);
+        border-radius:10px;
+        background:var(--gold-dim);
+        padding:16px;
+        display:flex; align-items:center; gap:12px;
+        cursor:pointer;
+        transition:border-color .2s, background .2s;
+    }
+    .file-drop:hover{ border-color:var(--gold); background:rgba(201,162,75,0.16); }
+    .file-drop .fd-icon{
+        width:40px; height:40px; flex:0 0 auto;
+        border-radius:10px;
+        background:rgba(201,162,75,0.18);
+        color:var(--gold-bright);
+        display:flex; align-items:center; justify-content:center;
+        font-size:15px;
+    }
+    .file-drop .fd-text strong{
+        display:block;
+        font-size:13.5px;
+        color:var(--text);
+    }
+    .file-drop .fd-text span{
+        font-size:12px;
+        color:var(--text-dim);
+    }
+
+    .btn-submit-report{
+        width:100%;
+        background:linear-gradient(135deg, var(--danger) 0%, var(--danger-deep) 100%);
+        color:#fff;
+        border:none;
+        padding:15px;
+        border-radius:12px;
+        font-weight:800;
+        font-size:clamp(15px, 3vw, 17px);
+        cursor:pointer;
+        transition:transform .2s var(--ease), box-shadow .2s, opacity .2s;
+        margin-top:6px;
+        min-height:54px;
+        display:flex; align-items:center; justify-content:center; gap:10px;
+        box-shadow:0 10px 26px rgba(185,28,60,0.35);
+    }
+    .btn-submit-report:hover{ transform:translateY(-1px); box-shadow:0 14px 32px rgba(224,64,88,0.42); }
+    .btn-submit-report:active{ transform:scale(.98); }
+    .btn-submit-report:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
+
+    /* ============================================================
+       التوست
+       ============================================================ */
     .toast-stack{
-        position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
-        display:flex; flex-direction:column; gap:6px;
+        position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+        display:flex; flex-direction:column; gap:8px;
         z-index:9999;
-        width:min(92vw, 400px);
+        width:min(92vw, 420px);
     }
     .toast{
-        background:var(--ink);
-        color:#fff;
-        padding:12px 16px;
-        border-radius:var(--radius-s);
-        font-size:clamp(13px, 2vw, 14px);
-        display:flex; align-items:center; gap:10px;
-        box-shadow:0 10px 26px rgba(0,0,0,0.25);
-        animation:toastIn .25s ease both;
+        background:var(--surface);
+        border:1px solid var(--line-soft);
+        border-right:4px solid var(--gold);
+        color:var(--text);
+        padding:14px 18px;
+        border-radius:12px;
+        font-size:14px;
+        font-weight:600;
+        display:flex; align-items:center; gap:12px;
+        box-shadow:0 16px 44px rgba(0,0,0,0.5);
+        animation:toastIn .3s var(--ease) both;
     }
-    .toast.danger{ background:var(--danger); }
-    .toast.success{ background:var(--safe); }
-    .toast.warning{ background:var(--warn); }
-    @keyframes toastIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
-
-    /* ================================================ */
-    /* 🟢 تحسينات التوافق مع الهواتف والأجهزة اللوحية   */
-    /* ================================================ */
-
-    /* شاشات صغيرة جداً (هواتف صغيرة، عرض أقل من 400 بكسل) */
-    @media (max-width: 400px) {
-        body { padding: 10px 8px 70px; }
-        .masthead-top { padding: 14px 14px 12px; }
-        .brand-seal { width: 38px; height: 38px; font-size: 15px; }
-        .brand-text h1 { font-size: 16px; }
-        .brand-text p { font-size: 10px; }
-        .ledger .stat { padding: 4px 8px; min-width: 60px; }
-        .ledger .stat strong { font-size: 15px; }
-        .btn-report { padding: 10px 14px; font-size: 13px; min-height: 42px; }
-        .search-wrap input { padding: 10px 36px 10px 12px; font-size: 13px; min-height: 42px; }
-        .toolbar-actions select { padding: 10px 12px; font-size: 13px; min-height: 42px; }
-        .modal-box { padding: 16px 14px 20px; }
-        .modal-box h2 { font-size: 17px; }
-        .modal-box .field-group input,
-        .modal-box .field-group select,
-        .modal-box .field-group textarea { padding: 10px 12px; font-size: 13px; min-height: 42px; }
-        .modal-box .field-group .file-label { padding: 8px 14px; font-size: 13px; min-height: 38px; }
-        .modal-box .btn-submit-report { padding: 12px; font-size: 15px; min-height: 46px; }
-        .places-grid { grid-template-columns: 1fr; gap: 14px; }
-        .place-card { padding: 14px 14px 12px; }
-        .place-image { max-height: 160px; }
-        .stamp { font-size: 10px; padding: 2px 8px; left: 8px; bottom: 8px; }
+    .toast i{ font-size:16px; flex-shrink:0; }
+    .toast.danger{ border-right-color:var(--danger); }
+    .toast.danger i{ color:var(--danger); }
+    .toast.success{ border-right-color:var(--safe); }
+    .toast.success i{ color:var(--safe); }
+    .toast.warning{ border-right-color:var(--gold); }
+    .toast.warning i{ color:var(--gold-bright); }
+    @keyframes toastIn{
+        from{ opacity:0; transform:translateY(14px) scale(.97); }
+        to{ opacity:1; transform:translateY(0) scale(1); }
+    }
+    .toast.hide{ animation:toastOut .25s ease both; }
+    @keyframes toastOut{
+        to{ opacity:0; transform:translateY(10px) scale(.97); }
     }
 
-    /* هواتف متوسطة وكبيرة (عرض 401-768 بكسل) */
-    @media (min-width: 401px) and (max-width: 768px) {
-        body { padding: 14px 12px 70px; }
-        .masthead-top { padding: 18px 18px 16px; }
-        .brand-seal { width: 42px; height: 42px; font-size: 17px; }
-        .brand-text h1 { font-size: 19px; }
-        .ledger .stat { padding: 6px 12px; min-width: 70px; }
-        .ledger .stat strong { font-size: 17px; }
-        .btn-report { padding: 11px 18px; font-size: 14px; min-height: 46px; }
-        .search-wrap input { padding: 11px 38px 11px 14px; font-size: 14px; min-height: 46px; }
-        .toolbar-actions select { padding: 11px 14px; font-size: 14px; min-height: 46px; }
-        .modal-box { padding: 20px 18px 24px; }
-        .modal-box h2 { font-size: 19px; }
-        .modal-box .field-group input,
-        .modal-box .field-group select,
-        .modal-box .field-group textarea { padding: 11px 14px; font-size: 14px; min-height: 46px; }
-        .modal-box .btn-submit-report { padding: 13px; font-size: 16px; min-height: 50px; }
-        .places-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        .place-card { padding: 16px 16px 14px; }
-        .place-image { max-height: 180px; }
-        .stamp { font-size: 11px; padding: 3px 10px; }
+    /* تحسينات اللمس */
+    @media (hover:none) and (pointer:coarse){
+        .place-card:hover{ transform:none; }
+        .place-card:active{ transform:scale(.985); }
+        .header-cta:hover{ transform:none; }
     }
 
-    /* أجهزة لوحية وشاشات متوسطة (769-1024 بكسل) */
-    @media (min-width: 769px) and (max-width: 1024px) {
-        .places-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-        .place-image { max-height: 200px; }
+    /* الطباعة */
+    @media print{
+        .site-header, .toolbar-section, .modal-overlay, .toast-stack, .fab-report, .site-footer{ display:none !important; }
+        body{ background:#fff; color:#000; }
+        .place-card{ break-inside:avoid; box-shadow:none; border:1px solid #ccc; opacity:1; transform:none; }
     }
 
-    /* شاشات كبيرة (أكثر من 1024 بكسل) */
-    @media (min-width: 1025px) {
-        .places-grid { grid-template-columns: repeat(3, 1fr); gap: 22px; }
-        .place-image { max-height: 220px; }
-        .ledger { width: auto; margin-top: 0; flex-wrap: nowrap; }
-        .ledger .stat { flex: none; }
-        .toolbar-actions { flex: 0 1 auto; flex-wrap: nowrap; }
-    }
-
-    /* شاشات واسعة جداً (أكثر من 1400 بكسل) */
-    @media (min-width: 1400px) {
-        .places-grid { grid-template-columns: repeat(4, 1fr); }
-    }
-
-    /* تحسينات إضافية لللمس */
-    @media (hover: none) and (pointer: coarse) {
-        .btn-report:hover { transform: none; }
-        .place-card:hover { transform: none; }
-        .btn-report:active { transform: scale(0.96); }
-        .place-card:active { transform: scale(0.98); }
-    }
-
-    /* تحسين الطباعة (اختياري) */
-    @media print {
-        .btn-report, .modal-overlay, .toast-stack { display: none !important; }
-        .place-card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
-    }
-
-    /* تحسين عرض الصور على الشاشات الصغيرة */
-    .place-image {
-        width: 100%;
-        height: auto;
-        aspect-ratio: 16 / 9;
-        object-fit: cover;
-        border-radius: var(--radius-s);
-        margin: 8px 0 10px;
-        background: #e9e2d0;
-        border: 1px solid #d8cdb0;
-        max-height: 220px;
-    }
-    @media (max-width: 480px) {
-        .place-image { max-height: 160px; }
+    /* تقليل الحركة */
+    @media (prefers-reduced-motion:reduce){
+        *, *::before, *::after{ animation-duration:.01ms !important; transition-duration:.01ms !important; }
+        .place-card{ opacity:1; transform:none; }
     }
 </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- الهيدر -->
-        <div class="masthead">
-            <div class="masthead-top">
+
+    <div class="top-strip" aria-hidden="true"></div>
+
+    <!-- ================= الهيدر ================= -->
+    <header class="site-header" id="siteHeader">
+        <div class="container">
+            <div class="header-inner">
                 <div class="brand">
                     <div class="brand-seal"><i class="fas fa-shield-halved"></i></div>
                     <div class="brand-text">
@@ -556,48 +861,105 @@
                         <p>استعراض الكيانات والأماكن المحظورة فقط</p>
                     </div>
                 </div>
-                <div class="ledger">
-                    <div class="stat total"><span>إجمالي الملفات</span><strong id="totalCount">0</strong></div>
-                    <div class="stat bad"><span>في القائمة السوداء</span><strong id="blackCount">0</strong></div>
-                    <div class="stat good"><span>آمنة حالياً</span><strong id="safeCount">0</strong></div>
+                <button class="header-cta" onclick="openModal()">
+                    <i class="fas fa-plus-circle"></i>
+                    <span class="cta-text-full">الإبلاغ عن كيان جديد</span>
+                    <span class="cta-text-sm">إبلاغ</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- ================= الهيرو ================= -->
+        <section class="hero">
+            <span class="hero-badge"><span class="dot"></span> سجل مُحدَّث لحظياً</span>
+            <h2>السجل الرسمي للكيانات <span class="accent">المحظورة</span> والمُدرجة في القائمة السوداء</h2>
+            <p class="sub">قاعدة بيانات موثّقة تُتيح لك استعراض الأماكن والكيانات المحظورة، والإبلاغ عن أي كيان جديد لمراجعته وإدراجه في السجل.</p>
+
+            <!-- الإحصائيات -->
+            <div class="stats-board">
+                <div class="stat-cell total">
+                    <div class="icon"><i class="fas fa-folder-open"></i></div>
+                    <div class="num" id="totalCount" data-target="0">0</div>
+                    <div class="label">إجمالي الملفات</div>
+                </div>
+                <div class="stat-cell bad">
+                    <div class="icon"><i class="fas fa-ban"></i></div>
+                    <div class="num" id="blackCount" data-target="0">0</div>
+                    <div class="label">في القائمة السوداء</div>
+                </div>
+                <div class="stat-cell good">
+                    <div class="icon"><i class="fas fa-circle-check"></i></div>
+                    <div class="num" id="safeCount" data-target="0">0</div>
+                    <div class="label">آمنة حالياً</div>
                 </div>
             </div>
-            <div class="warning-strip"></div>
-        </div>
+        </section>
 
-        <div class="report-toolbar">
-            <button class="btn-report" onclick="openModal()">
-                <i class="fas fa-plus-circle"></i> الإبلاغ عن كيان جديد
-            </button>
-            <div class="toolbar-actions">
+        <!-- ================= شريط الأدوات ================= -->
+        <div class="toolbar-section">
+            <div class="toolbar">
                 <div class="search-wrap">
-                    <input type="text" id="searchInput" placeholder="ابحث بالاسم أو العنوان..." oninput="renderPlaces()">
+                    <input type="text" id="searchInput" placeholder="ابحث بالاسم أو العنوان..." oninput="applyFilters()" aria-label="بحث بالاسم أو العنوان">
                     <i class="fas fa-magnifying-glass"></i>
                 </div>
-                <select id="categoryFilter" onchange="renderPlaces()">
-                    <option value="الكل">كل التصنيفات</option>
-                    <option value="مطعم">مطعم</option>
-                    <option value="كافيه">كافيه</option>
-                    <option value="فندق">فندق</option>
-                    <option value="صيدلية">صيدلية</option>
-                    <option value="مكان خروج">مكان خروج</option>
-                    <option value="متجر إلكتروني">متجر إلكتروني</option>
-                    <option value="صفحة فيسبوك">صفحة فيسبوك</option>
-                </select>
+                <div class="filter-wrap">
+                    <i class="fas fa-filter"></i>
+                    <select id="categoryFilter" onchange="applyFilters()" aria-label="تصفية حسب التصنيف">
+                        <option value="الكل">كل التصنيفات</option>
+                        <option value="مطعم">مطعم</option>
+                        <option value="كافيه">كافيه</option>
+                        <option value="فندق">فندق</option>
+                        <option value="صيدلية">صيدلية</option>
+                        <option value="مكان خروج">مكان خروج</option>
+                        <option value="متجر إلكتروني">متجر إلكتروني</option>
+                        <option value="صفحة فيسبوك">صفحة فيسبوك</option>
+                    </select>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
             </div>
         </div>
 
-        <div id="placesContainer" class="places-grid"></div>
-    </div>
+        <!-- ================= عنوان القسم ================= -->
+        <div class="section-head">
+            <h3><i class="fas fa-ban"></i> الكيانات المحظورة</h3>
+            <span class="results-count" id="resultsCount"><strong>0</strong> نتيجة</span>
+        </div>
 
-    <!-- مودال الإبلاغ -->
-    <div class="modal-overlay" id="reportModal">
+        <!-- ================= شبكة البطاقات ================= -->
+        <div id="placesContainer" class="places-grid" aria-live="polite"></div>
+
+    </main>
+
+    <!-- ================= الفوتر ================= -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="foot-brand"><i class="fas fa-shield-halved"></i> السجل العام للقائمة السوداء</div>
+            <p>جميع البلاغات تخضع للمراجعة قبل الإدراج في السجل الرسمي.</p>
+        </div>
+    </footer>
+
+    <!-- زر عائم للموبايل -->
+    <button class="fab-report" onclick="openModal()" aria-label="الإبلاغ عن كيان جديد">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- ================= مودال الإبلاغ ================= -->
+    <div class="modal-overlay" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-box">
-            <button class="close-modal" onclick="closeModal()">&times;</button>
-            <h2><i class="fas fa-flag"></i> نموذج الإبلاغ عن كيان جديد</h2>
-            <form id="reportForm" onsubmit="submitReport(event)">
+            <button class="close-modal" onclick="closeModal()" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            <div class="modal-head">
+                <div class="m-icon"><i class="fas fa-flag"></i></div>
+                <div>
+                    <h2 id="modalTitle">نموذج الإبلاغ عن كيان جديد</h2>
+                    <p>املأ البيانات التالية وسيتم مراجعة البلاغ فوراً</p>
+                </div>
+            </div>
+            <form id="reportForm" class="modal-form" onsubmit="submitReport(event)">
                 <div class="field-group">
-                    <label><i class="fas fa-tags"></i> نوع الكيان / المكان</label>
+                    <label for="reportCategory"><i class="fas fa-tags"></i> نوع الكيان / المكان</label>
                     <select id="reportCategory" required>
                         <option value="">-- اختر التصنيف --</option>
                         <optgroup label="📍 أماكن وخدمات فعلية">
@@ -624,39 +986,42 @@
                     </select>
                 </div>
                 <div class="field-group">
-                    <label><i class="fas fa-store"></i> الاسم</label>
+                    <label for="reportPlaceName"><i class="fas fa-store"></i> الاسم</label>
                     <input type="text" id="reportPlaceName" placeholder="مثال: مطعم النيل الأزرق" required>
                 </div>
                 <div class="field-group">
-                    <label><i class="fas fa-map-pin"></i> العنوان أو الرابط</label>
+                    <label for="reportAddress"><i class="fas fa-map-pin"></i> العنوان أو الرابط</label>
                     <input type="text" id="reportAddress" placeholder="شارع البحر، الإسكندرية / أو رابط الصفحة" required>
                 </div>
-                <div class="field-group">
-                    <label><i class="fas fa-user"></i> اسم المبلغ</label>
-                    <input type="text" id="reportReporter" placeholder="أدخل اسمك" required>
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="reportReporter"><i class="fas fa-user"></i> اسم المبلغ</label>
+                        <input type="text" id="reportReporter" placeholder="أدخل اسمك" required>
+                    </div>
+                    <div class="field-group">
+                        <label for="reportPhone"><i class="fas fa-phone"></i> رقم الهاتف</label>
+                        <input type="tel" id="reportPhone" placeholder="مثال: 01012345678" required>
+                    </div>
                 </div>
                 <div class="field-group">
-                    <label><i class="fas fa-phone"></i> رقم الهاتف</label>
-                    <input type="tel" id="reportPhone" placeholder="مثال: 01012345678" required>
-                </div>
-                <div class="field-group">
-                    <label><i class="fas fa-pen"></i> وصف الشكوى</label>
+                    <label for="reportDescription"><i class="fas fa-pen"></i> وصف الشكوى</label>
                     <textarea id="reportDescription" placeholder="اكتب تفاصيل الشكوى هنا..." required></textarea>
                 </div>
                 <div class="field-group">
                     <label><i class="fas fa-image"></i> صورة أو لقطة شاشة (اختياري)</label>
-                    <div>
-                        <label class="file-label" for="reportImage">
-                            <i class="fas fa-upload"></i> اختر ملف
-                        </label>
-                        <input type="file" id="reportImage" accept="image/*" style="display:none;" onchange="updateFileName(this)">
-                        <span class="file-name" id="fileNameDisplay">لم يتم اختيار صورة</span>
-                    </div>
+                    <label class="file-drop" for="reportImage">
+                        <span class="fd-icon"><i class="fas fa-cloud-arrow-up"></i></span>
+                        <span class="fd-text">
+                            <strong id="fileNameDisplay">اضغط لاختيار صورة</strong>
+                            <span>PNG أو JPG — لقطة شاشة أو صورة توضيحية</span>
+                        </span>
+                    </label>
+                    <input type="file" id="reportImage" accept="image/*" style="display:none;" onchange="updateFileName(this)">
                 </div>
                 <div class="field-group">
-                    <label><i class="fas fa-map"></i> رابط الموقع الجغرافي (اختياري)</label>
+                    <label for="reportLocationLink"><i class="fas fa-map"></i> رابط الموقع الجغرافي (اختياري)</label>
                     <input type="text" id="reportLocationLink" placeholder="مثال: https://maps.app.goo.gl/xxxx">
-                    <p style="font-size:12px; color:var(--muted); margin-top:5px;">رابط خرائط جوجل أو رابط الصفحة الإلكترونية.</p>
+                    <p class="hint">رابط خرائط جوجل أو رابط الصفحة الإلكترونية.</p>
                 </div>
                 <button type="submit" class="btn-submit-report" id="submitBtn">
                     <i class="fas fa-paper-plane"></i> إرسال البلاغ للمراجعة
@@ -678,21 +1043,77 @@
 
         let currentPlaces = [];
         let selectedFile = null;
+        let dataLoaded = false;
 
+        /* ============ توست ============ */
+        const toastIcons = {
+            info: 'fa-circle-info',
+            success: 'fa-circle-check',
+            danger: 'fa-circle-exclamation',
+            warning: 'fa-triangle-exclamation'
+        };
         function showToast(message, type = 'info') {
             const stack = document.getElementById('toastStack');
             const el = document.createElement('div');
             el.className = `toast ${type}`;
-            el.innerHTML = message;
+            el.innerHTML = `<i class="fas ${toastIcons[type] || toastIcons.info}"></i><span>${message}</span>`;
             stack.appendChild(el);
-            setTimeout(() => el.remove(), 3200);
+            setTimeout(() => {
+                el.classList.add('hide');
+                setTimeout(() => el.remove(), 260);
+            }, 3200);
         }
 
-        async function renderPlaces() {
-            const container = document.getElementById('placesContainer');
-            const search = document.getElementById('searchInput').value.toLowerCase().trim();
-            const category = document.getElementById('categoryFilter').value;
+        /* ============ عدادات متحركة ============ */
+        function animateCounter(el, target) {
+            const start = parseInt(el.textContent) || 0;
+            if (start === target) { el.textContent = target; return; }
+            const duration = 900;
+            const t0 = performance.now();
+            function tick(now) {
+                const p = Math.min((now - t0) / duration, 1);
+                const eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.round(start + (target - start) * eased);
+                if (p < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        }
 
+        /* ============ هيكل التحميل ============ */
+        function renderSkeletons() {
+            const container = document.getElementById('placesContainer');
+            container.innerHTML = Array.from({ length: 6 }).map(() => `
+                <div class="skeleton-card">
+                    <div class="sk sk-img"></div>
+                    <div class="sk-body">
+                        <div class="sk sk-line w40"></div>
+                        <div class="sk sk-line w75"></div>
+                        <div class="sk sk-line w60"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /* ============ ظهور البطاقات بالتدرج ============ */
+        function revealCards() {
+            const cards = document.querySelectorAll('.place-card');
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        io.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.08 });
+            cards.forEach((card, i) => {
+                card.style.transitionDelay = `${Math.min(i % 6, 5) * 60}ms`;
+                io.observe(card);
+            });
+        }
+
+        /* ============ تحميل البيانات ============ */
+        async function loadPlaces() {
+            if (!dataLoaded) renderSkeletons();
             try {
                 const { data, error } = await supabaseClient
                     .from('places')
@@ -701,64 +1122,96 @@
 
                 if (error) {
                     showToast('خطأ في تحميل البيانات: ' + error.message, 'danger');
+                    document.getElementById('placesContainer').innerHTML = emptyStateHtml('تعذّر تحميل البيانات حالياً.', 'حاول تحديث الصفحة مرة أخرى.');
                     return;
                 }
 
                 currentPlaces = data || [];
-                document.getElementById('totalCount').textContent = currentPlaces.length;
-                document.getElementById('blackCount').textContent = currentPlaces.filter(p => p.is_blacklisted).length;
-                document.getElementById('safeCount').textContent = currentPlaces.filter(p => !p.is_blacklisted).length;
+                dataLoaded = true;
 
-                let filtered = currentPlaces.filter(p => {
-                    if (p.is_blacklisted !== true) return false;
-                    const matchSearch = p.name.toLowerCase().includes(search) || p.address.toLowerCase().includes(search);
-                    const matchCategory = category === 'الكل' || p.category === category;
-                    return matchSearch && matchCategory;
-                });
+                animateCounter(document.getElementById('totalCount'), currentPlaces.length);
+                animateCounter(document.getElementById('blackCount'), currentPlaces.filter(p => p.is_blacklisted).length);
+                animateCounter(document.getElementById('safeCount'), currentPlaces.filter(p => !p.is_blacklisted).length);
 
-                if (filtered.length === 0) {
-                    container.innerHTML = `<div class="empty-state"><i class="fas fa-ban"></i><p>لا توجد أماكن أو كيانات في القائمة السوداء حالياً.</p></div>`;
-                    return;
-                }
-
-                container.innerHTML = filtered.map(p => {
-                    // تم حذف المقياس (meter-block) بالكامل من البطاقة
-                    const imageHtml = p.image_url ? 
-                        `<img src="${p.image_url}" alt="${p.name}" class="place-image" loading="lazy" onerror="this.style.display='none'">` : 
-                        `<div class="place-image" style="display:flex;align-items:center;justify-content:center;color:#b7ad92;font-size:14px;background:#e9e2d0;"><i class="fas fa-image" style="margin-left:8px;"></i> لا توجد صورة</div>`;
-
-                    return `
-                    <div class="place-card blacklisted">
-                        <span class="tab">🚫 محظور</span>
-                        <div class="card-head">
-                            <span class="name">${p.name}</span>
-                            <span class="file-id">رقم الملف #${String(p.id).padStart(4, '0')}</span>
-                        </div>
-                        ${imageHtml}
-                        <div class="address"><i class="fas fa-location-dot"></i> ${p.address}</div>
-                        <div class="stamp">محظور</div>
-                    </div>
-                `;
-                }).join('');
-
+                applyFilters();
             } catch (err) {
                 showToast('حدث خطأ غير متوقع: ' + err.message, 'danger');
             }
         }
 
+        function emptyStateHtml(title, sub) {
+            return `
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="fas fa-folder-open"></i></div>
+                    <p>${title}</p>
+                    <span>${sub}</span>
+                </div>`;
+        }
+
+        /* ============ الفلترة والعرض ============ */
+        function applyFilters() {
+            const container = document.getElementById('placesContainer');
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const category = document.getElementById('categoryFilter').value;
+
+            const filtered = currentPlaces.filter(p => {
+                if (p.is_blacklisted !== true) return false;
+                const matchSearch = (p.name || '').toLowerCase().includes(search) || (p.address || '').toLowerCase().includes(search);
+                const matchCategory = category === 'الكل' || p.category === category;
+                return matchSearch && matchCategory;
+            });
+
+            document.getElementById('resultsCount').innerHTML = `<strong>${filtered.length}</strong> نتيجة`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = emptyStateHtml(
+                    'لا توجد أماكن أو كيانات في القائمة السوداء حالياً.',
+                    search || category !== 'الكل' ? 'جرّب تعديل كلمات البحث أو التصنيف.' : 'سيظهر هنا أي كيان يتم إدراجه في السجل.'
+                );
+                return;
+            }
+
+            container.innerHTML = filtered.map(p => {
+                const mediaHtml = p.image_url
+                    ? `<img src="${p.image_url}" alt="${p.name}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;no-image&quot;><i class=&quot;fas fa-image&quot;></i>لا توجد صورة</div>'">`
+                    : `<div class="no-image"><i class="fas fa-image"></i>لا توجد صورة</div>`;
+
+                const catHtml = p.category ? `<span class="badge-cat">${p.category}</span>` : '';
+
+                return `
+                <article class="place-card">
+                    <div class="card-media">
+                        <span class="badge-banned"><i class="fas fa-ban"></i> محظور</span>
+                        ${catHtml}
+                        ${mediaHtml}
+                    </div>
+                    <div class="card-body">
+                        <span class="file-id">رقم الملف #${String(p.id).padStart(4, '0')}</span>
+                        <span class="name">${p.name}</span>
+                        <div class="address"><i class="fas fa-location-dot"></i> ${p.address}</div>
+                        <div class="card-footer">
+                            <span class="status-chip"><span class="s-dot"></span> مُدرَج في القائمة السوداء</span>
+                            <span class="stamp">محظور</span>
+                        </div>
+                    </div>
+                </article>`;
+            }).join('');
+
+            revealCards();
+        }
+
+        /* ============ المودال ============ */
         function openModal() {
             document.getElementById('reportModal').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
-
         function closeModal() {
             document.getElementById('reportModal').classList.remove('active');
             document.body.style.overflow = 'auto';
             document.getElementById('reportForm').reset();
-            document.getElementById('fileNameDisplay').textContent = 'لم يتم اختيار صورة';
+            document.getElementById('fileNameDisplay').textContent = 'اضغط لاختيار صورة';
             selectedFile = null;
         }
-
         function updateFileName(input) {
             const display = document.getElementById('fileNameDisplay');
             if (input.files && input.files.length > 0) {
@@ -766,10 +1219,11 @@
                 display.textContent = selectedFile.name;
             } else {
                 selectedFile = null;
-                display.textContent = 'لم يتم اختيار صورة';
+                display.textContent = 'اضغط لاختيار صورة';
             }
         }
 
+        /* ============ إرسال البلاغ ============ */
         async function submitReport(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
@@ -825,11 +1279,11 @@
                         await sendTextMessage(caption);
                         showToast('تم الإرسال (بدون صورة) بسبب خطأ في رفع الصورة', 'warning');
                     } else {
-                        showToast('✅ تم إرسال البلاغ مع الصورة بنجاح!', 'success');
+                        showToast('تم إرسال البلاغ مع الصورة بنجاح!', 'success');
                     }
                 } else {
                     await sendTextMessage(caption);
-                    showToast('✅ تم إرسال البلاغ بنجاح!', 'success');
+                    showToast('تم إرسال البلاغ بنجاح!', 'success');
                 }
 
                 closeModal();
@@ -856,22 +1310,21 @@
             return response.json();
         }
 
-        renderPlaces();
-
+        /* ============ تفاعلات عامة ============ */
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 const modal = document.getElementById('reportModal');
-                if (modal.classList.contains('active')) {
-                    closeModal();
-                }
+                if (modal.classList.contains('active')) closeModal();
             }
         });
-
         document.getElementById('reportModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
+            if (e.target === this) closeModal();
         });
+        window.addEventListener('scroll', () => {
+            document.getElementById('siteHeader').classList.toggle('scrolled', window.scrollY > 8);
+        }, { passive: true });
+
+        loadPlaces();
     </script>
 </body>
 </html>
