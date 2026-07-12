@@ -199,19 +199,14 @@
     }
 
     /* ============================================================
-       شريط الأدوات (بحث + فلتر) — ثابت
+       شريط الأدوات (بحث + فلتر) — مستقل في مكانه، لا يتحرك مع التمرير
        ============================================================ */
     .toolbar-section{
-        position:sticky;
-        top:76px; /* ارتفاع الهيدر التقريبي (14+48+14) */
-        z-index:50;
+        position:static;
         padding:12px 0 14px;
         margin-top:16px;
         background:rgba(8,13,26,0.72);
-        backdrop-filter:blur(14px);
-        -webkit-backdrop-filter:blur(14px);
         border-bottom:1px solid var(--line-soft);
-        transition:background .3s ease;
     }
     .toolbar{
         display:flex; gap:10px; flex-wrap:wrap;
@@ -1018,7 +1013,6 @@
     /* تحسينات إضافية للشاشات الصغيرة جداً */
     @media (max-width: 560px) {
         .toolbar-section {
-            top: 70px; /* تعديل طفيف للهواتف */
             padding: 8px 0 10px;
         }
         .toolbar {
